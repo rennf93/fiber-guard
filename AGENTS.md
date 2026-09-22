@@ -85,6 +85,7 @@ There is no Makefile. Every command below comes from the CI workflows or the REA
 | `REDIS_HOST=127.0.0.1 go test -tags integration ./...` | Unit plus Redis-backed integration tests | `.github/workflows/ci.yml` step "go test (integration, redis)", README.md |
 | `go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...` | Vulnerability scan | `.github/workflows/ci.yml` and `scheduled-lint.yml` |
 | `docker compose -f examples/simple_app/docker-compose.yml up --build -d --wait` | Local live smoke of the guarded example app (assertions in `.github/workflows/live-smoke.yml`) | `.github/workflows/live-smoke.yml` |
+| `pip install mkdocs-material && mkdocs build --strict` | Build the documentation site (CI deploys it on master) | `.github/workflows/docs.yml` |
 
 CI runs the test job on a Go matrix of `1.25.x` and `1.26.x` (fail-fast disabled) with `GOTOOLCHAIN: auto`, plus a separate `govulncheck` job on stable Go. The integration step runs against a `redis:7-alpine` service container on port 6379 with `REDIS_HOST=127.0.0.1`.
 
@@ -102,12 +103,17 @@ CI runs the test job on a Go matrix of `1.25.x` and `1.26.x` (fail-fast disabled
 ├── examples/            # example apps inside the root module (see examples/*/README.md)
 │   ├── simple_app/      # minimal guarded fiber server: main.go, Dockerfile, docker-compose.yml (app + redis)
 │   └── advanced_app/    # production-style: cmd/server, internal/config, internal/routes, Dockerfile, docker-compose.yml
+├── mkdocs.yml           # mkdocs-material site definition (docs/ sources)
+├── docs/                # documentation site sources: index.md, usage.md, configuration.md
 └── .github/
     ├── workflows/ci.yml           # push/PR: gofmt, vet, unit, integration, govulncheck
     ├── workflows/release.yml      # tag push gate: same tests, plus module tag consumable check
     ├── workflows/scheduled-lint.yml  # weekly cron vet + govulncheck
     ├── workflows/code-ql.yml      # CodeQL go analysis on push/PR/weekly
     ├── workflows/live-smoke.yml   # dockerized smoke of both example apps (push/PR to master)
+    ├── workflows/docs.yml         # mkdocs material site build (strict) + GitHub Pages deploy on master
+    ├── workflows/container-release.yml  # publish the advanced example image to GHCR (release / examples change)
+    ├── workflows/upstream-drift.yml     # daily adapter suite against guard-core-go@master
     ├── workflows/issue-link.yml   # PR must close an open issue (or carry no-issue)
     ├── workflows/summary.yml      # on-demand AI issue summaries via the needs-summary label
     ├── workflows/sync-labels.yml  # applies .github/labels.yml on change
@@ -126,7 +132,7 @@ CI runs the test job on a Go matrix of `1.25.x` and `1.26.x` (fail-fast disabled
 - `github.com/gofiber/fiber/v3 v3.5.0` (direct require in `go.mod`), providing `fiber.Handler`, `fiber.Ctx`, and `fiber.App` for the bridging surface.
 - `github.com/valyala/fasthttp v1.73.0` (direct require in `go.mod`): Fiber's underlying engine. Its types already appear in Fiber's public API (`Ctx.RequestCtx()` returns `*fasthttp.RequestCtx`); the shim imports it for the deterministic primitives (`RemoteIP`, `IsTLS`, `Request.Header.All()`, `QueryArgs().VisitAll()`).
 - Redis 7 for integration tests (CI service container `redis:7-alpine`); runtime Redis usage is a guard-core-go concern, not this adapter's.
-- GitHub Actions: CI on push and pull_request, Release Gate on `v*` tag push, weekly Scheduled Lint, CodeQL (go), dockerized Live Smoke of the example apps on push/PR to master, issue-link, greetings, labeler, stale, summary, and label sync; Dependabot for gomod and actions. All workflows use minimal permissions and pinned action SHAs.
+- GitHub Actions: CI on push and pull_request, Release Gate on `v*` tag push, weekly Scheduled Lint, CodeQL (go), dockerized Live Smoke of the example apps on push/PR to master, Docs Update (mkdocs strict build + Pages deploy), Container Release (advanced example image to GHCR), daily Upstream Drift against guard-core-go@master, issue-link, greetings, labeler, stale, summary, and label sync; Dependabot for gomod and actions. All workflows use minimal permissions and pinned action SHAs.
 
 ## Testing Guidelines
 
