@@ -1,0 +1,54 @@
+services:
+  advanced-app:
+    build:
+      context: ../..
+      dockerfile: examples/advanced_app/Dockerfile
+    image: fiber-guard-advanced-app:local
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - REDIS_PREFIX=${REDIS_PREFIX:-guard_core:}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-admin-token-change-me}
+      - RATE_LIMIT=${RATE_LIMIT:-30}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60}
+      - AUTO_BAN_THRESHOLD=${AUTO_BAN_THRESHOLD:-5}
+      - AUTO_BAN_DURATION=${AUTO_BAN_DURATION:-300}
+      # Optional: block traffic from cloud provider ranges (e.g. "AWS,GCP").
+      # Requires outbound network access for the initial IP range refresh.
+      - BLOCK_CLOUD_PROVIDERS=${BLOCK_CLOUD_PROVIDERS:-}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 192M
+
+volumes:
+  redis-data:
