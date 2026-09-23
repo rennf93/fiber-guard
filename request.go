@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	fiberlib "github.com/gofiber/fiber/v3"
-	"github.com/rennf93/guard-core-go/guardcore"
+	"github.com/rennf93/guard-core-go/v4/guardcore"
 )
 
 const DefaultMaxBodyBytes int64 = 262144

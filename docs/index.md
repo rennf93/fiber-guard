@@ -13,7 +13,7 @@ the block verdict when one arrives.
 ## Installation
 
 ```bash
-go get github.com/rennf93/fiber-guard github.com/rennf93/guard-core-go@v0.1.0
+go get github.com/rennf93/fiber-guard github.com/rennf93/guard-core-go/v4@v4.0.4
 ```
 
 Requires Go 1.25 or later and Fiber v3.5 or later.
@@ -27,7 +27,7 @@ import (
 	"log"
 
 	fiberlib "github.com/gofiber/fiber/v3"
-	guardcore "github.com/rennf93/guard-core-go/guardcore"
+	guardcore "github.com/rennf93/guard-core-go/v4/guardcore"
 	guardfiber "github.com/rennf93/fiber-guard"
 )
 
