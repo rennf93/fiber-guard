@@ -532,3 +532,51 @@ func TestMiddlewareInvalidOptionsIgnored(t *testing.T) {
 		t.Fatalf("middleware with defaults must pass clean traffic, got %d called=%v", resp.StatusCode(), p.called)
 	}
 }
+
+func TestMiddlewareRouteIDViaRequestPathMapping(t *testing.T) {
+	// Regression: Fiber v3 leaves c.Route() pointing at a use-middleware's
+	// own route entry ("/"), so a route-ID mapper keyed on c.FullPath()
+	// never matches and route-scoped engine config silently never applies.
+	// The mapper must match the concrete request path (c.Path()) for the
+	// engine's route_config check to fire, including on group-registered
+	// routes like the advanced example's /admin group.
+	guard, engine := newTestMiddleware(t, nil)
+	engine.Routes.Register("admin", func(rc *guardcore.RouteConfig) {
+		rc.RequiredHeaders = guardcore.RequiredHeaders{
+			{Name: "X-Admin-Token", Value: "secret"},
+		}
+	})
+
+	routeIDs := map[string]string{"/admin/banned": "admin"}
+	app := fiberlib.New()
+	app.Use(func(c fiberlib.Ctx) error {
+		if routeID, ok := routeIDs[c.Path()]; ok {
+			c.SetContext(WithRouteID(c.Context(), routeID))
+		}
+		return c.Next()
+	})
+	app.Use(guard)
+	admin := app.Group("/admin")
+	admin.Get("/banned", func(c fiberlib.Ctx) error {
+		return c.SendString("ok")
+	})
+
+	missing := runFiberApp(t, app, "192.0.2.44:51234", newReq("GET", "/admin/banned", "", nil))
+	if missing.StatusCode() != 400 {
+		t.Fatalf("missing admin token must be rejected with 400 by the engine's required-header guard, got %d", missing.StatusCode())
+	}
+	if !strings.Contains(string(missing.Body()), "Missing required header: X-Admin-Token") {
+		t.Fatalf("missing-token body must name the header, got %q", string(missing.Body()))
+	}
+
+	authed := newReq("GET", "/admin/banned", "", map[string]string{"X-Admin-Token": "secret"})
+	ok := runFiberApp(t, app, "192.0.2.44:51234", authed)
+	if ok.StatusCode() != 200 {
+		t.Fatalf("valid admin token must reach the handler, got %d", ok.StatusCode())
+	}
+
+	unmapped := runFiberApp(t, app, "192.0.2.44:51234", newReq("GET", "/admin/other", "", nil))
+	if unmapped.StatusCode() != 404 {
+		t.Fatalf("unregistered admin subroute must 404 (no handler), got %d", unmapped.StatusCode())
+	}
+}

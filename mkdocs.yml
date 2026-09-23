@@ -1,0 +1,26 @@
+site_name: fiber-guard
+site_description: guard-core-go security middleware for Fiber v3
+site_author: Renn F
+repo_url: https://github.com/rennf93/fiber-guard
+repo_name: rennf93/fiber-guard
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+  features:
+    - content.code.copy
+    - navigation.sections
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - tables
+
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - Configuration: configuration.md
