@@ -1,0 +1,27 @@
+Release Notes
+=============
+
+___
+
+v1.0.0 (2026-09-24)
+-------------------
+
+First stable release (v1.0.0)
+-----------------------------
+
+### Added
+
+- **The first stable release of fiber-guard, the net/http middleware adapter for the guard-core-go engine.** It translates `fiber.Ctx` into the guardcore request surface, runs the engine, and translates verdicts to exact HTTP responses. Works with any `fiber.App` chain via `app.Use`. Unlike the net/http and Gin siblings, this adapter is fasthttp-native: Fiber runs on fasthttp, not `net/http`, so the adapter shims `fiber.Ctx` directly.
+- **17/17 security checks parity with guard-core 4.0.4**, covering suspicious activity detection, penetration attempts, IP bans and allow lists, cloud provider detection, rate limiting, HTTPS enforcement, required headers, referrer policy, user agent filtering, and route-level configuration, with binary-noise gates on the detection engine.
+- **Fail-closed behavior on engine malfunctions**: any engine error answers 500 instead of letting the request through. Detection covers at most the first `MaxBodyBytes` of the body (default 262144, tunable via `guardfiber.WithMaxBodyBytes`); payloads beyond the bound are not scanned, and the full body still reaches your handler untouched.
+- **Route-level configuration** via `engine.Routes.Register` plus `guardfiber.WithRouteID(ctx, id)` on the Fiber user context (set `c.SetContext(...)` in a middleware registered before the guard), and a swappable fail-closed logger via `guardfiber.WithLogger(l)`.
+- **fasthttp-native shimming with documented realities**: the request body is fully buffered in memory before the middleware runs (Fiber `BodyLimit`, default 4 MiB, is the network-level bound), `Body()` returns the Content-Encoding-decoded view (that is what the engine scans), and client identity is the fasthttp TCP peer IP, not `c.IP()` proxy resolution.
+- **Documentation site** (MkDocs: index and usage/configuration pages), simple and advanced example apps, and a dockerized live smoke workflow over the example apps.
+
+### Changed
+
+- **Migrated to the guard-core-go `/v4` module path.** The dependency is now `github.com/rennf93/guard-core-go/v4 v4.0.4` and every import uses `github.com/rennf93/guard-core-go/v4/guardcore`. The previous `github.com/rennf93/guard-core-go v0.1.0` pre-release is retired.
+- **Release engineering harmonized with guard-core-go**: a dockerized `Makefile` (install, test, lint, clean, bump-version) and a stdlib-only `.github/scripts/bump_version.py` that scaffolds this changelog; the git tag is the version.
+- **Upstream drift guard, demo container publishing, and community workflows** from the parity polish: a daily test run of the adapter suite against guard-core-go@master, a container-release workflow for the demo image, docs publishing to GitHub Pages, plus labeling, staleness, and greetings workflows.
+
+___
