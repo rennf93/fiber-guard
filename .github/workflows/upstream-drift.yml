@@ -49,7 +49,7 @@ jobs:
             -e REDIS_HOST=127.0.0.1 \
             golang:1.25-alpine sh -c '
               set -e
-              go mod edit -replace github.com/rennf93/guard-core-go=/work/guard-core-go-upstream
+              go mod edit -replace github.com/rennf93/guard-core-go/v4=/work/guard-core-go-upstream
               go mod tidy
               go test ./...
               go test -tags integration ./...

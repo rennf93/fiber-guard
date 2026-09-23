@@ -18,7 +18,7 @@ import (
 	fiberlib "github.com/gofiber/fiber/v3"
 	recovermw "github.com/gofiber/fiber/v3/middleware/recover"
 	guardfiber "github.com/rennf93/fiber-guard"
-	guardcore "github.com/rennf93/guard-core-go/guardcore"
+	guardcore "github.com/rennf93/guard-core-go/v4/guardcore"
 )
 
 func main() {

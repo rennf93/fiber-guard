@@ -6,7 +6,7 @@ description: Fiber middleware adapter for guard-core-go. Use when adding Guard s
 ## Quick Reference
 
 - Module: github.com/rennf93/fiber-guard, package fiber, go 1.25.0, MIT
-- Core: github.com/rennf93/guard-core-go v0.1.0 (normal require)
+- Core: github.com/rennf93/guard-core-go/v4 v4.0.4 (normal require)
 - Surface: New(app *fiber.App, opts ...Option) (fiber.Handler, error); Options: WithMaxBodyBytes (default 262144), WithLogger, WithRouteID
 
 ## Installation
