@@ -2,12 +2,14 @@
 
 Fiber middleware adapter for [guard-core-go](https://github.com/rennf93/guard-core-go). Translates `fiber.Ctx` into the guardcore request surface, runs the engine, and translates verdicts to exact Fiber responses (status, headers, body, then stop). Works with any `fiber.App` chain via `app.Use`. Unlike the net/http and Gin siblings, this adapter is fasthttp-native: Fiber runs on [fasthttp](https://github.com/valyala/fasthttp), not `net/http`, so the adapter shims `fiber.Ctx` directly.
 
+Docs: https://rennf93.github.io/fiber-guard/
+
 ## Install
 
 The adapter has no release tag yet; pin a commit (or track `main`) until the first tag is published:
 
 ```
-go get github.com/rennf93/fiber-guard@main github.com/rennf93/guard-core-go/v4@v4.0.4
+go get github.com/rennf93/fiber-guard@v1.0.0 github.com/rennf93/guard-core-go/v4@v4.0.4
 ```
 
 The package name is `fiber`, which collides with `github.com/gofiber/fiber/v3` (also package `fiber`), so import the adapter with an explicit alias such as `guardfiber`.
