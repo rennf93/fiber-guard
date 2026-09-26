@@ -140,7 +140,7 @@ func TestMiddlewareNilEngineRejected(t *testing.T) {
 }
 
 func TestMiddlewareAllowsRequestUnmutated(t *testing.T) {
-	guard, _ := newTestMiddleware(t, nil)
+	guard, engine := newTestMiddleware(t, nil)
 	req := newReq("GET", "/api/users?v=1", "", nil)
 	resp, p := serve(t, guard, "192.0.2.44:51234", req)
 	if resp.StatusCode() != 200 || !p.called {
@@ -151,11 +151,68 @@ func TestMiddlewareAllowsRequestUnmutated(t *testing.T) {
 	}
 	// fasthttp surfaces its default "Content-Type: text/plain; charset=utf-8"
 	// on every response from the start of the handler chain (unlike net/http).
-	// The adapter must add nothing beyond that server-owned default.
+	// Beyond that server-owned default the handler sees exactly the engine's
+	// security header set. fasthttp canonicalizes header names its own way
+	// (X-XSS-Protection becomes X-Xss-Protection), so membership and value
+	// checks must be case-insensitive.
+	want := engine.ResponseHeaders()
+	for name := range p.headers {
+		if strings.EqualFold(name, "Content-Type") {
+			continue
+		}
+		found := false
+		for engineName := range want {
+			if strings.EqualFold(name, engineName) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("adapter must add only security headers on pass, got %v", p.headers)
+		}
+	}
+	for name, value := range want {
+		if got := string(p.headers.Get(name)); !strings.EqualFold(string(got), value) {
+			t.Fatalf("security header %s = %q, want %q", name, got, value)
+		}
+	}
+}
+
+// Security headers land on every pass-through response; disabling them
+// restores the header-free pass (fasthttp's default Content-Type aside).
+func TestMiddlewareAppliesSecurityHeadersOnPass(t *testing.T) {
+	guard, _ := newTestMiddleware(t, func(c *guardcore.SecurityConfig) {
+		c.SecurityHeaders.Enabled = false
+	})
+	req := newReq("GET", "/api/users", "", nil)
+	resp, p := serve(t, guard, "192.0.2.44:51234", req)
+	if resp.StatusCode() != 200 || !p.called {
+		t.Fatalf("clean request must pass, got %d called=%v", resp.StatusCode(), p.called)
+	}
 	for name := range p.headers {
 		if !strings.EqualFold(name, "Content-Type") {
-			t.Fatalf("adapter must not add headers on pass, got %v", p.headers)
+			t.Fatalf("disabled security headers must add nothing on pass, got %v", p.headers)
 		}
+	}
+}
+
+// Config overrides and custom headers flow through the adapter untouched.
+func TestMiddlewareSecurityHeadersHonorsConfig(t *testing.T) {
+	guard, engine := newTestMiddleware(t, func(c *guardcore.SecurityConfig) {
+		c.SecurityHeaders.FrameOptions = "DENY"
+		c.SecurityHeaders.Custom = map[string]string{"X-Request-Realm": "edge"}
+	})
+	want := engine.ResponseHeaders()
+	req := newReq("GET", "/api", "", nil)
+	resp, _ := serve(t, guard, "192.0.2.44:51234", req)
+	if got := resp.Header.Peek("X-Frame-Options"); string(got) != "DENY" {
+		t.Fatalf("override must reach the response, got X-Frame-Options %q", got)
+	}
+	if got := resp.Header.Peek("X-Request-Realm"); string(got) != "edge" {
+		t.Fatalf("custom header must reach the response, got X-Request-Realm %q", got)
+	}
+	if len(want) == 0 {
+		t.Fatal("engine must produce the header set")
 	}
 }
 
@@ -170,11 +227,16 @@ func TestMiddlewareBlocksBannedIPExactly(t *testing.T) {
 	if p.called {
 		t.Fatal("blocked request must not reach the handler")
 	}
-	// The verdict carries no headers. fasthttp itself adds the default
-	// Content-Type when a body is written; that is server behavior, not
-	// adapter translation, so only verdict-shaped headers are asserted here.
+	// The verdict carries no routing headers of its own beyond the engine's
+	// security headers. fasthttp itself adds the default Content-Type when a
+	// body is written; that is server behavior, not adapter translation.
 	if location := string(resp.Header.Peek("Location")); location != "" {
-		t.Fatalf("verdict must not inject headers, got Location %q", location)
+		t.Fatalf("verdict must not inject routing headers, got Location %q", location)
+	}
+	for name, value := range engine.ResponseHeaders() {
+		if got := string(resp.Header.Peek(name)); got != value {
+			t.Fatalf("blocked response security header %s = %q, want %q", name, got, value)
+		}
 	}
 }
 
