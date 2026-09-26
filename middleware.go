@@ -58,6 +58,12 @@ func (m *middleware) wrap(c fiberlib.Ctx) error {
 		applyResponse(c, verdict)
 		return nil
 	}
+	// Security headers on the pass-through path: the engine computes the
+	// set (blocked verdicts already carry it), the adapter applies it
+	// before the handler writes its response.
+	for name, value := range m.engine.ResponseHeaders() {
+		c.Set(name, value)
+	}
 	return c.Next()
 }
 
