@@ -3,6 +3,18 @@ Release Notes
 
 ___
 
+v1.1.0 (2026-09-26)
+-------------------
+
+Security headers on pass-through responses
+------------------------------------------
+
+### Added
+
+- **Security headers on every pass-through response.** The adapter applies the engine's `ResponseHeaders()` set in one loop before the handler writes, so clean responses carry the same default header set as blocked ones (mirroring the engine's `process_response`). Disabling `SecurityHeaders` restores the header-free pass (fasthttp's default `Content-Type` aside), and config overrides plus custom headers flow through the adapter untouched.
+
+___
+
 v1.0.1 (2026-09-26)
 -------------------
 
