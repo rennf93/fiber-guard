@@ -9,7 +9,7 @@ Docs: <https://rennf93.github.io/fiber-guard/>
 The adapter has no release tag yet; pin a commit (or track `main`) until the first tag is published:
 
 ```
-go get github.com/rennf93/fiber-guard@v1.0.0 github.com/rennf93/guard-core-go/v4@v4.0.4
+go get github.com/rennf93/fiber-guard@v1.0.1 github.com/rennf93/guard-core-go/v4@v4.1.0
 ```
 
 The package name is `fiber`, which collides with `github.com/gofiber/fiber/v3` (also package `fiber`), so import the adapter with an explicit alias such as `guardfiber`.
@@ -60,7 +60,7 @@ Two fasthttp realities to know: the request body is fully buffered in memory bef
 
 ## Development
 
-The middleware consumes the core as a normal module dependency (`github.com/rennf93/guard-core-go/v4 v4.0.4`); no `replace` directive is used or needed. For cross-repo work on the core itself, add a temporary local `replace` line in your own checkout and drop it before committing.
+The middleware consumes the core as a normal module dependency (`github.com/rennf93/guard-core-go/v4 v4.1.0`); no `replace` directive is used or needed. For cross-repo work on the core itself, add a temporary local `replace` line in your own checkout and drop it before committing.
 
 Integration tests run against real Redis:
 

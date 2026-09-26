@@ -3,6 +3,18 @@ Release Notes
 
 ___
 
+v1.0.1 (2026-09-26)
+-------------------
+
+guard-core-go v4.1.0 floor bump
+-------------------------------
+
+### Changed
+
+- **Raised the engine floor to `github.com/rennf93/guard-core-go/v4 v4.1.0`.** Blocked verdicts now carry the engine's default security headers engine-side, and the adapter's verdict translation is unchanged. The floor also carries the engine's per-route IP allow/block lists, `exempt_ips`, geo country blocking, and CORS support. The fiber suite never pinned the header-free blocked response (fasthttp owns `Content-Type`, and only routing headers such as `Location` are asserted against), so no adapter assertion changes were needed.
+
+___
+
 v1.0.0 (2026-09-24)
 -------------------
 
