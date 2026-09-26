@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/gofiber/fiber/v3 v3.5.0
-	github.com/rennf93/guard-core-go/v4 v4.0.4
+	github.com/rennf93/guard-core-go/v4 v4.1.0
 	github.com/valyala/fasthttp v1.74.0
 )
 
@@ -18,6 +18,7 @@ require (
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/molecule-man/go-brrr v1.0.1 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/redis/go-redis/v9 v9.22.0 // indirect
 	github.com/tinylib/msgp v1.6.4 // indirect
